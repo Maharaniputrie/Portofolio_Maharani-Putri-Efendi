@@ -1,0 +1,130 @@
+---
+title: "Tutorial2_Maharani Putri Efendi"
+author: "Maharani Putri Efendi"
+date: "2023-12-13"
+output: html_document
+---
+
+# Melakukan Load Dataset
+```{r setup, include=FALSE}
+download.file("http://www.openintro.org/stat/data/mlb11.RData", destfile = "mlb11.RData")
+load("mlb11.RData")
+```
+
+#Mencari nilai korelasi pada dataset baseball antara jumlah run dan jumlah at-bats
+```{r}
+cor(mlb11$runs, mlb11$at_bats)
+```
+
+# Summarize square residuals dan melakukan visualisasinya
+```{r}
+plot_ss(x = mlb11$at_bats, y = mlb11$runs, showSquares = TRUE)
+```
+
+# Membuat Model Linear 1
+```{r}
+m1 <- lm(runs ~ at_bats, data = mlb11)
+summary(m1)
+```
+# Visualisasi Model linear 1
+```{r}
+plot(mlb11$runs ~ mlb11$at_bats)
+abline(m1)
+```
+
+# Model Diagnostic
+1. membuat scatter plot (grafik sebaran) antara residual model regresi linear (m1$residuals) dan variabel prediktor tertentu (mlb11$at_bats). 
+```{r}
+plot(m1$residuals ~ mlb11$at_bats)
+abline(h = 0, lty = 3) # adds a horizontal dashed line at y = 0
+```
+# Membuat grafik quantile-quantile (Q-Q) dari residual model regresi linear. 
+```{r}
+qqnorm(m1$residuals)
+qqline(m1$residuals) # adds diagonal line to the normal prob plot
+```
+
+## ON YOUR OWN
+1.  Choose another traditional variable from mlb11 that you think might be a good predictor of runs. Produce a scatterplot of the two variables and fit a linear model. At a glance, does there seem to be a linear relationship?
+
+--> Menurut saya, salah satu hal yang bisa memprediksi hasil dalam permainan bisbol adalah jumlah hits. Ketika ada lebih banyak hits, kemungkinannya adalah jumlah run juga akan lebih tinggi sehingga semakin banyak hits, semakin besar peluang tim untuk mencetak poin. Dengan demikian, jumlah hits bisa menjadi petunjuk yang baik untuk melihat bagaimana performa suatu tim dapat memengaruhi jumlah run yang mereka hasilkan dalam permainan bisbol. Berikut ini jika dilihat dari plotnya:
+```{r}
+m2 <- lm(runs ~ hits, data = mlb11)
+plot(mlb11$runs ~ mlb11$hits)
+abline(m2)
+```
+
+2. How does this relationship compare to the relationship between runs and at_bats? Use the R^2values from the two model summaries to compare. Does your variable seem to predict runs better than at bats? How can you tell?
+```{r}
+summary(m1)
+summary(m2)
+```
+--> Semakin bagus model dapat dilihat dari niai R-Square. Apabila nilai R-Square mendekati 1 maka model dapat dikatakan bagus. Hal itu menunjukkan sejauh mana model dapat menjelaskan variasi dalam variabel dependen berdasarkan variabel independen. Pada m1, memiliki nilai R-Square sekitar 0.3729 sedangkan model yang saya buat yakni m2 memiliki nilai R-Square 0.6419. 
+
+--> Dari penjelasan diatas, maka dapat dikatakan m2 memiliki kinerja yang lebih baik dibandingkan dengan m1. Hal ini menunjukkan, jumlah hits memiliki korelasi kuat dengan jumlah runs daripada at-bats
+
+3. Now that you can summarize the linear relationship between two variables, investigate the relationships between runs and each of the other five traditional variables. Which variable best predicts runs? Support your conclusion using the graphical and numerical methods we’ve discussed (for the sake of conciseness, only include output for the best variable, not all five).
+--> visualisasi koralsi runs dengan bat_avg
+
+```{r}
+plot(mlb11$runs ~ mlb11$bat_avg, main = "Relationship between Runs and Batting Avg", xlab = "Batting Avg", ylab = "Runs")
+m3 <- lm(runs ~ bat_avg, data = mlb11)
+abline(m3)
+```
+--> Histogram untuk residuals
+
+```{r}
+hist(m3$residuals)
+```
+--? Q-Q Plot 
+
+```{r}
+qqnorm(m3$residuals)
+qqline(m3$residuals)
+```
+--> Summarize
+
+```{r}
+cor(mlb11$runs, mlb11$bat_avg)
+summary(m3)
+```
+
+4. Now examine the three newer variables. These are the statistics used by the author of Moneyball to predict a teams success. In general, are they more or less effective at predicting runs that the old variables? Explain using appropriate graphical and numerical evidence. Of all ten variables we’ve analyzed, which seems to be the best predictor of runs? Using the limited (or not so limited) information you know about these baseball statistics, does your result make sense?
+
+```{r}
+cor(mlb11$runs, mlb11$new_onbase)
+cor(mlb11$runs, mlb11$new_slug)
+cor(mlb11$runs, mlb11$new_obs)
+```
+-->Setelah mengevaluasi statistik ringkasan dan koefisien korelasi dari tiga prediktor baru, yaitu `new_onbase`, `new_slug`, dan `new_obs`, dapat disimpulkan bahwa hubungan antara variabel `new_obs` dan jumlah runs memiliki nilai R-squared dan koefisien korelasi yang paling tinggi. Dengan demikian, dapat diinterpretasikan bahwa variabel `new_obs` mungkin menjadi prediktor yang paling baik dan efektif dalam memprediksi jumlah runs.
+
+5. Check the model diagnostics for the regression model with the variable you decided was the best predictor for runs
+
+--> Membuat model
+```{r}
+m4 <- lm(runs ~ new_obs, data = mlb11)
+```
+
+--> Visualisasi residual
+```{r}
+# Linearity
+plot(m4$residuals ~ mlb11$bat_avg)
+abline(h = 0, lty = 3)
+```
+Dari grafik tersebut, terlihat adanya hubungan linier karena variasi residual tetap konstan sepanjang distribusi. Meskipun demikian, tidak terdapat indikasi adanya lengkungan atau pola ketidaknormalan pada plot tersebut.
+
+```{r}
+# Nearly normal residuals
+hist(m4$residuals)
+```
+# Apabila distribusi residual mendekati normal, plot kuantil-kuantil normal dari residual akan menunjukkan garis yang hampir lurus. Pada plot kuantil-kuantil normal dari residual yang terlihat, garisnya cukup lurus, sehingga dapat disimpulkan dengan aman bahwa distribusi residual mendekati normal, dan model ini memenuhi kondisi residual yang hampir normal.
+
+```{r}
+qqnorm(m4$residuals)
+qqline(m4$residuals)
+```
+Jika distribusi residual mendekati normal, grafik kuantil-kuantil normal dari residual akan menunjukkan garis yang hampir lurus. Melihat pada grafik kuantil-kuantil normal dari residual, garisnya terlihat cukup lurus, sehingga dapat diambil kesimpulan bahwa distribusi residual mendekati normal, dan model ini memenuhi syarat dari residual yang hampir normal.
+
+Dari grafik tersebut, kita juga melihat bahwa variasi titik-titik di sekitar garis regresi tetap relatif stabil, menunjukkan bahwa kondisi variabilitas yang konstan juga terpenuhi.
+
+

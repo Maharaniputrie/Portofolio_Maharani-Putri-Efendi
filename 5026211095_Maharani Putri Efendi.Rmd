@@ -1,0 +1,208 @@
+---
+title: "Asistensi 1"
+author: "Maharani Putri Efendi"
+date: "2023-12-01"
+output: html_document
+---
+
+## Melakukan Rename Dataset Advertising
+```{r}
+ads <- Advertising
+```
+
+## Melakukan pengecekan nilai interquartile dan median pada dataset dengan melakukan summary pada dataset ads
+```{r}
+summary (ads)
+```
+## Membuat plot untuk melihat persebaran data di setiap kolom
+```{r}
+plot(ads$TV,type='p',col="red")
+plot(ads$Sales, ads$Newspaper, type='p',col="green")
+plot(ads$Sales, ads$Radio,type='p',col="purple")
+plot(ads$Sales, ads$TV, type='p',col="darkgreen")
+plot(ads)
+```
+
+
+Question 1: Did the data pretty much aligned in one direction? 
+--> Dari scatter plot di atas, dapat dilihat variabel TV terhadap sales dan Variabel Radio terhadap sales menuju 1 garis lurus atau juga bisa disebut memiliki tren yang naik. Untuk variabel Newspaper terhadap sales memiliki persebaran yang membentuk garis tren
+
+Question 2: The more you spend on what ads that the more sales you can expect?
+--> Jika dilihat dari scatter plot diatas, dapat disimpulkan jika penjualan TV dan radio lebih menguntungkan daripada penjualan newspapar karena penjualan TV dan radio menunjukkan tren garis naik. 
+
+
+## Mengecek  apakah setiap kolom dalam ads adalah numerik atau tidak
+```{r}
+num.cols <- sapply(ads, is.numeric)
+```
+
+## Menghitung korelasi antar-kolom (variabel) dalam ads dan kemudian menampilkan matriks korelasi.
+```{r}
+cor.data <- cor(ads)
+cor.data
+```
+## Melakukan install packages corrplot untuk membuat visualisasi korelasi dengan heatmap
+```{r}
+install.packages("corrplot") 
+library(corrplot)
+```
+
+## Membuat heatmap korelasi antar variabel
+```{r}
+corrplot(cor.data,method='color')
+corrplot(cor.data, method="number", number.digits = 2)
+corrplot(cor.data, method="number", number.digits = 2, bg='darkgreen')
+```
+
+## Membuat model linear regression menggunakan data ads dan variabel TV terhadap sales
+```{r}
+model1 <- lm(Sales ~ TV, data= ads)
+summary (model1)
+```
+Model regresi linear digunakan untuk memodelkan hubungan linier antara satu variabel dependen (Sales) dan satu variabel independen (TV) serta melakukan summary pada model regresi linear. 
+
+Note : 
+- Jika nilai R-Square semakin mendekati nilai 1 maka semakin akurat datanya
+- P value semakin mendekati 1 semakin tidak akurat datanya sedangkan semakin mendekati 0 maka semakin akurat
+- Residual = Prediction - Actual
+
+## Melakukan install packaget untuk melakukan analisis data, visualisasi, atau pembangunan model statistik dalam lingkungan pemrograman R
+```{r}
+install.packages("caTools")
+library(caTools)
+```
+
+## Sampling ads
+```{r}
+set.seed(100) #menentukan pengacakan urutan keberapa
+sample <- sample.split(ads$TV, SplitRatio = 0.7) #split rationya adalah 70%
+train <- subset(ads, sample = TRUE)
+test <- subset(ads, sample = FALSE) 
+```
+## Membuat model linear regression menggunakan data train dan variabel TV terhadap sales
+```{r}
+model2 <- lm(Sales ~ TV, train)
+summary (model2)
+```
+
+## Membuat model linear regression menggunakan data ads dan variabel TV + Radio terhadap sales
+```{r}
+model3 <- lm(Sales ~ TV + Radio, data=ads)
+summary (model3)
+```
+## Membuat model linear regression menggunakan data train dan variabel TV + Radio terhadap sales
+```{r}
+model4 <- lm(Sales ~ TV + Radio, train)
+summary (model4)
+```
+
+Question 1: Which variable has the highest and lowest correlation with sales? 
+--> Dilihat dari heatmap yang ada, variabel yang memiliki korelasi paling kuat terhadap sales adalah variabel TV yakni sebesar 0.78 sedangkan korelasi paling lemah terhadap sales adalah variabel newspaper yakni sebesar 0.23
+
+Question 2: Find the regression model (intercept and slope)!
+--> model yang dibuat pada ads : 
+1. Model1 :  data ads dan variabel TV terhadap sales
+  - Nilai Intercept : 7.032594
+  - Slope TV        : 0.047537
+2. Model2 :  data train dan variabel TV terhadap sales
+  - Nilai Intercept : 7.032594
+  - Slope TV        : 0.047537
+3. Model3 :  data ads dan variabel TV + Radio terhadap sales
+  - Nilai Intercept : 2.92110
+  - Slope TV        : 0.04575
+  - Slope Radio     : 0.18799
+4. Model4 :  data train dan variabel TV + Radio  terhadap sales
+  - Nilai Intercept : 2.92110
+  - Slope TV        : 0.04575
+  - Slope Radio     : 0.18799
+
+
+
+## Menghitung residu dari model regresi dan menampilkan beberapa baris pertama dari dataframe yang berisi residu tersebut
+
+```{r}
+res1 <- residuals(model1)
+res1 <- as.data.frame(res1)
+res2 <- residuals(model2)
+res2 <- as.data.frame(res2)
+res3 <- residuals(model3)
+res3 <- as.data.frame(res3)
+res4 <- residuals(model4)
+res4 <- as.data.frame(res4)
+head(res1)
+head(res2)
+head(res3)
+head(res4)
+```
+## Membuat prediksi dengan model linear 
+```{r}
+sales.prediction1 <- predict(model1, test)
+sales.prediction2 <- predict(model2, test)
+sales.prediction3 <- predict(model3, test)
+sales.prediction4 <- predict(model4, test)
+sales.prediction1
+```
+```{r}
+sales.prediction2
+```
+```{r}
+sales.prediction3
+```
+```{r}
+sales.prediction4
+```
+
+## menggabungkan kolom sales prediction ke dalam dataframe result
+```{r}
+result <- cbind(sales.prediction1,test$Sales)
+result2 <- cbind(sales.prediction2,test$Sales)
+result3 <- cbind(sales.prediction3,test$Sales)
+result4 <- cbind(sales.prediction4,test$Sales)
+result
+```
+```{r}
+result2
+```
+```{r}
+result3
+```
+```{r}
+result4
+```
+Kolom pertama (sales.prediction) berisi nilai prediksi penjualan yang dihasilkan oleh model regresi pada dataset uji (test). Kolom kedua (test$Sales) berisi nilai aktual penjualan dari dataset uji.
+
+
+## Mencari niali r-square dari 4 model sebelumnya
+```{r}
+rsq = summary(model1)$r.sq
+rsq2 = summary(model2)$r.sq
+rsq3 = summary(model3)$r.sq
+rsq4 = summary(model4)$r.sq
+rsq
+rsq2
+rsq3
+rsq4
+```
+
+## Mendownload csv dari result
+
+```{r}
+write.csv(result, "D:/add/result.csv", row.names = FALSE)
+write.csv(result2, "D:/add/result2.csv", row.names = FALSE)
+write.csv(result, "D:/add/result3.csv", row.names = FALSE)
+write.csv(result2, "D:/add/result4.csv", row.names = FALSE)
+```
+
+Question 1: What is the predicted sales value? 
+--> Sales prediction value (nilai prediksi penjualan) merujuk pada estimasi atau perkiraan nilai penjualan yang dihasilkan oleh suatu model, biasanya sales prediction ini berdasarkan data historis atau faktor-faktor lain yang relevan. Dalam konteks regresi linear, nilai prediksi penjualan dapat dihitung dengan menggunakan model regresi untuk memproyeksikan atau memperkirakan nilai penjualan berdasarkan variabel-variabel prediktor yang terlibat dalam model.
+
+Question 2: The model can predict …% of the data correctly.
+--> untuk mengetahui seberapa akuart suatu model itu bisa memprediksi sales maka kita lihat nilai r-squarenya. Berikut ini nilai r-square :
+1. Model1 : 61.1%
+2. Model2 : 61.1%
+3. Model3 : 89.7%
+4. Model4 : 89.7%
+
+Bisa dilihat pada model 3 dan 4 memiliki nilai r-square yang lebih besar daripada model 1 dan 2, hal tersebut dikarenakan model 3 dan 4 menggunakan 2 variabel yaitu TV dan Radio dimana masing - masing variabel memiliki korelasi yang kuat terhadap sales. 
+
+

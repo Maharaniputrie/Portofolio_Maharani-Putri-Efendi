@@ -1,0 +1,323 @@
+---
+title: "EAS ADD" 
+author: "Maharani Putri Efendi" 
+date: "2023-12-17" 
+output:
+html_document
+---
+
+#Membuat dataframe dengan nama data1
+```{r}
+data1 <- data
+```
+
+#Melakukan pengecekan summary data
+```{r}
+summary (data1)
+```
+#Melakukan pengecekan row data
+```{r}
+jumlah_baris <- nrow(data1)
+print(jumlah_baris)
+sum(is.na(data1))
+```
+#Cek Missing Value
+```{r}
+sum(is.na(data1))
+```
+
+#Melakukan penghapusan kolom 
+
+```{r}
+# Kolom yang ingin dijatuhkan
+columns_to_drop <- c("kelurahan", "kecamatan", "judul_dokumen_pelaporan","X_id")
+
+# Menjatuhkan kolom A dan B dari data frame
+data1 <- select(data1, -one_of(columns_to_drop))
+```
+Penghapusan pada kolom kelurahan dan kecamatan dilakukan karena sudah terdapat kolom faskes yang mana bisa merepresentasikan dari kedua kolom tersebut. Penghapusan kolom judul_dokumen_pelaporan dikarenaka tidak memerlukan kolom tersebut untuk melakukan analitik diagnostik
+
+
+#Mengubah nama kolom
+```{r}
+# Merename beberapa kolom
+new_col_names <- c("poskeskel", "pos_bal", "pos_re", "pos_lan", "kel_man", "imunisasi_anak", "jenis_ukbm", "jumlah_ukbm", "siaga", "faskes")
+colnames(data1)[colnames(data1) %in% c("keberadaan_poskeskel", "posyandu_balita", "posyandu_remaja", "posyandu_lansia", "kelompok_asuhan_mandiri_toga_dan_akupresure", "universal_child_immunization", "jenis_ukbm_aktif", "jumlah_ukbm_aktif", "status_siaga_aktif", "nama_faskes")] <- new_col_names
+
+```
+
+#Melakukan encoded pada kolom status siaga
+1. Menghitung jumlah uniq value pada kolom siaga
+```{r}
+value_counts <- table(data1$siaga)
+print(value_counts)
+```
+2. Melakuakan encoded dengan nilai 1=madya, 2=purnama, 3=mandiri
+```{r}
+
+data1$siaga <- as.numeric(factor(data1$siaga, levels = c("madya", "purnama", "mandiri")))
+
+```
+3. Melakukan pengecekan apakah data sudah menjadi numeric
+```{r}
+summary(data1$siaga)
+```
+
+```{r}
+value_counts <- table(data1$siaga)
+print(value_counts)
+```
+
+#Melakukan encoded pada kolom faskes
+1. Menghitung jumlah uniq value pada kolom faskes
+```{r}
+value_counts <- table(data1$faskes)
+print(value_counts)
+```
+3. Melakukan encoded
+```{r}
+# Mengidentifikasi nilai unik dalam kolom "siaga"
+unique_values <- unique(data1$faskes)
+data1$faskes <- as.numeric(factor(data1$faskes, levels = unique_values))
+
+```
+
+```{r}
+summary(data1$faskes)
+```
+
+```{r}
+value_counts <- table(data1$faskes)
+print(value_counts)
+```
+
+#Melakukan encode pada imunisasi_anak
+```{r}
+sum(is.na(data1$imunisasi_anak))
+```
+```{r}
+value_counts <- table(data1$imunisasi_anak)
+print(value_counts)
+```
+```{r}
+data1$imunisasi_anak <- as.numeric(factor(data1$imunisasi_anak, levels = c("ya")))
+
+```
+
+```{r}
+summary(data1$imunisasi_anak)
+```
+
+```{r}
+value_counts <- table(data1$imunisasi_anak)
+print(value_counts)
+```
+#Melakukan pengecekan data1
+```{r}
+# Menampilkan tipe data menggunakan fungsi sapply() dan class()
+sapply(data1, class)
+
+```
+
+
+#Melakukan pengecekan apakah terdapat outlier
+```{r}
+boxplot(data1$poskeskel, col = "lightblue", main = "Boxplot Tabel Data1", ylab = "Nilai", xlab="poskeskel")
+boxplot(data1$posbindu, col = "lightblue", main = "Boxplot Tabel Data1", ylab = "Nilai", xlab="posbindu")
+boxplot(data1$pos_bal, col = "lightblue", main = "Boxplot Tabel Data1", ylab = "Nilai", xlab="pos_bal")
+boxplot(data1$pos_re, col = "lightblue", main = "Boxplot Tabel Data1", ylab = "Nilai", xlab="pos_re")
+boxplot(data1$pos_lan, col = "lightblue", main = "Boxplot Tabel Data1", ylab = "Nilai", xlab="pos_lan")
+boxplot(data1$pos_ukk, col = "lightblue", main = "Boxplot Tabel Data1", ylab = "Nilai", xlab="pos_ukk")
+boxplot(data1$kel_man, col = "lightblue", main = "Boxplot Tabel Data1", ylab = "Nilai", xlab="kel_man")
+boxplot(data1$jenis_ukbm, col = "lightblue", main = "Boxplot Tabel Data1", ylab = "Nilai", xlab="jenis_ukbm")
+boxplot(data1$jumlah_ukbm, col = "lightblue", main = "Boxplot Tabel Data1", ylab = "Nilai", xlab="jumlah_ukbm")
+```
+
+#Melakukan Penghapusan Outlier dan visualisasi
+
+```{r}
+ratio_data <- c("poskeskel", "pos_bal", "pos_re", "pos_lan", "kel_man", "jenis_ukbm", "jumlah_ukbm", "posbindu", "pos_ukk")  # Gantilah dengan nama-nama kolom yang sesuai
+
+# Iterasi melalui kolom-kolom yang akan diplot
+for (data in ratio_data) {
+  # Check the number of unique values in the column
+  unique_values <- length(unique(data1[[data]]))
+
+  if (unique_values > 1) {
+    # Calculate the first and third quartiles
+    Q1 <- quantile(data1[[data]], 0.25)
+    Q3 <- quantile(data1[[data]], 0.75)
+
+    # Calculate the IQR (Interquartile Range)
+    IQR <- Q3 - Q1
+
+    # Define the lower and upper bounds for outliers
+    lower_bound <- Q1 - 1.5 * IQR
+    upper_bound <- Q3 + 1.5 * IQR
+
+    # Identify and remove outliers
+    outliers <- (data1[[data]] < lower_bound) | (data1[[data]] > upper_bound)
+    data1 <- data1[!outliers, ]
+  }
+}
+```
+
+```{r}
+jumlah_baris <- nrow(data1)
+print(jumlah_baris)
+```
+
+```{r}
+boxplot(data1$poskeskel, col = "lightblue", main = "Visualisasi setelah penghapusan outlier", ylab = "Nilai", xlab="poskeskel")
+boxplot(data1$posbindu, col = "lightblue", main = "Visualisasi setelah penghapusan outlier", ylab = "Nilai", xlab="posbindu")
+boxplot(data1$pos_bal, col = "lightblue", main = "Visualisasi setelah penghapusan outlier", ylab = "Nilai", xlab="pos_bal")
+boxplot(data1$pos_re, col = "lightblue", main = "Visualisasi setelah penghapusan outlier", ylab = "Nilai", xlab="pos_re")
+boxplot(data1$pos_lan, col = "lightblue", main = "Visualisasi setelah penghapusan outlier", ylab = "Nilai", xlab="pos_lan")
+boxplot(data1$pos_ukk, col = "lightblue", main = "Visualisasi setelah penghapusan outlier", ylab = "Nilai", xlab="pos_ukk")
+boxplot(data1$kel_man, col = "lightblue", main = "Visualisasi setelah penghapusan outlier", ylab = "Nilai", xlab="kel_man")
+boxplot(data1$jenis_ukbm, col = "lightblue", main = "Visualisasi setelah penghapusan outlier", ylab = "Nilai", xlab="jenis_ukbm")
+boxplot(data1$jumlah_ukbm, col = "lightblue", main = "Visualisasi setelah penghapusan outlier", ylab = "Nilai", xlab="jumlah_ukbm")
+```
+
+#Visualisasi Awal untuk melihat persebaran data
+
+```{r}
+plot(data1$poskeskel)
+plot(data1$posbindu)
+plot(data1$pos_bal)
+plot(data1$pos_re)
+plot(data1$pos_lan)
+plot(data1$pos_ukk)
+plot(data1$kel_man)
+plot(data1$jenis_ukbm)
+plot(data1$sbh)
+plot(data1$imunisasi_anak)
+plot(data1$jumlah_ukbm)
+plot(data1$siaga)
+plot(data1$faskes)
+```
+
+
+## Melakukan install packages corrplot untuk membuat visualisasi korelasi dengan heatmap
+```{r}
+install.packages("corrplot") 
+library(corrplot)
+```
+
+```{r}
+cor.data <- cor(data1)
+```
+
+```{r}
+heatmap(cor.data, 
+        Colv = NA,   # Non-Clustered Columns
+        Rowv = NA,   # Non-Clustered Rows
+        col = colorRampPalette(c("blue", "white", "red"))(100),  # Warna heatmap
+        main = "Heatmap Korelasi")  # Ukuran teks untuk kolom)
+```
+Dari heatmap korelasi diatas yang memiliki korelasi yang sangat kuat dan berbanding lurus dengan variabel target(jumlah ukbm) adalah pos_bal(posyandu balita)
+#Melakukan install packaget untuk melakukan analisis data, visualisasi, atau pembangunan model statistik dalam lingkungan pemrograman R
+
+```{r}
+install.packages("caTools")
+library(caTools)
+```
+## Sampling ads
+```{r}
+set.seed(100) # Menentukan pengacakan urutan keberapa
+sample <- sample.split(data1$jumlah_ukbm, SplitRatio = 0.7) # Split ratio adalah 70%
+
+# Membuat set pelatihan
+train <- subset(data1, sample == TRUE)
+
+# Membuat set pengujian
+test <- subset(data1, sample == FALSE)
+
+```
+
+## Membuat model linear regression menggunakan data train 
+```{r}
+model1 <- lm(jumlah_ukbm ~ pos_bal, train)
+summary (model1)
+```
+
+```{r}
+model2 <- lm(jumlah_ukbm ~ pos_bal+pos_lan, train)
+summary (model2)
+```
+
+
+## Menghitung residu dari model regresi dan menampilkan beberapa baris pertama dari dataframe yang berisi residu tersebut
+
+```{r}
+res1 <- residuals(model1)
+res1 <- as.data.frame(res1)
+res2 <- residuals(model2)
+res2 <- as.data.frame(res2)
+
+head(res1)
+head(res2)
+```
+#Menampilkan plot residual
+```{r}
+qqnorm(model1$residuals)
+qqnorm(model2$residuals)
+```
+
+
+```{r}
+prediction1 <- predict(model1, test)
+prediction2 <- predict(model2, test)
+```
+
+```{r}
+result <- cbind(prediction1,test$jumlah_ukbm)
+result2 <- cbind(prediction2,test$jumlah_ukbm)
+```
+
+```{r}
+head(result)
+head(result2)
+```
+```{r}
+# Memuat paket ggplot2
+install.packages("ggplot2")
+library(ggplot2)
+
+# Membuat data frame dari hasil prediksi dan nilai sebenarnya
+result_df <- data.frame(Prediction = c(result[, 1], result2[, 1]),
+                        Actual = c(result[, 2], result2[, 2]),
+                        Model = rep(c("Model1", "Model2"), each = nrow(result)))
+
+# Membuat scatter plot
+ggplot(result_df, aes(x = Actual, y = Prediction, color = Model)) +
+  geom_point() +
+  geom_abline(intercept = 0, slope = 1, linetype = "dashed") +  # Garis referensi untuk prediksi yang sempurna
+  labs(title = "Perbandingan Hasil Prediksi dengan Nilai Sebenarnya",
+       x = "Nilai Sebenarnya",
+       y = "Nilai Prediksi",
+       color = "Model") +
+  theme_minimal()
+
+```
+
+
+
+
+#Summarize RSQ 
+```{r}
+rsq = summary(model1)$r.sq
+rsq2 = summary(model2)$r.sq
+rsq
+rsq2
+```
+
+
+
+
+
+
+
+
+
+

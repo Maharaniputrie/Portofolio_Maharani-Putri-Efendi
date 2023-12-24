@@ -1,0 +1,149 @@
+---
+title: "Asistensi 2"
+author: "Maharani Putri Efendi"
+date: "2023-12-08"
+output: html_document
+---
+
+## Import dataset.
+
+## Exercise 2
+Describe the distribution of score. Is the distribution skewed? What does that tell you about how students rate courses? Is this what you expected to see? Why, or why not?
+
+1. Mengatur header 
+```{r}
+colnames(evals) <- evals[1,]
+evals <- evals[-1, ]
+```
+
+
+2. Mengubah dataset menjadi numerik dan visualisasi data awal
+```{r}
+evals$score <- as.numeric(evals$score)
+hist(evals$score)
+```
+
+## Exercise 3
+Excluding score, select two other variables and describe their relationship using an appropriate visualization (scatterplot, side-by-side boxplots, or mosaic plot).
+
+1. Melakuakn instalasi packages untuk plot
+
+```{r}
+install.packages("ggplot2")
+library(ggplot2)
+```
+
+2. Mencari hubungan pada data categorical dengan visualisasi mosaicplot
+
+```{r}
+mosaicplot(table(evals$ethnicity, evals$language), shade =TRUE)
+```
+
+
+```{r}
+mosaicplot(table(evals$rank, evals$cls_level), shade =TRUE)
+```
+warna biru maka nilai residualnya positif antara 2-4. Kalau putih nilai resiudalnya 0-2. 
+
+residualnya semakin dikit maka korelasi variabelnya semakin besar. Semakin terang warnanya semakin tidak berkorelasi
+
+##Exercise 4
+Replot the scatterplot, but this time use the function jitter() on the y- or the x coordinate. (Use ?jitter to learn more.) What was misleading about the initial scatterplot?
+
+1. Menampilakn visualisasi score dan average
+```{r}
+plot(evals$score ~ evals$bty_avg)
+```
+2. convert columns ke dalam numeric
+```{r}
+columns_to_convert <- c("age", "cls_per_eval", "cls_did_eval", "cls_student", "bty_f1lower", "bty_f1upper", "bty_f2upper", "bty_m1lower", "bty_m2upper", "bty_avg")
+evals[columns_to_convert] <- lapply(evals[columns_to_convert], as.numeric)
+
+# Plotting
+plot(jitter(evals$bty_avg), jitter(evals$score))
+
+```
+3. melihat apakah variabel signifikan(???) 
+```{r}
+m_bty <- lm(score ~ bty_avg, data=evals)
+```
+
+4.Menampilkan korelasi antara bty_avg dan score
+```{r}
+cor(evals$bty_avg, evals$score)
+```
+
+5. Menampilkan plot untuk resiudal
+```{r}
+plot(m_bty$residuals ~ evals$score)
+```
+ titik2nya semakin banyak kumpul di 1 garis maka korelasinya semakin kecil.
+ 
+
+##Exercise 5
+Let’s see if the apparent trend in the plot is something more than natural variation. Fit a linear model called m_bty to predict average professor score by average beauty rating and add the line to your plot using abline(m_bty). Write out the equation for the linear model and interpret the slope. Is average beauty score a statistically significant predictor? Does it appear to be a practically significant predictor?
+
+## Exercise 6
+
+
+1. 
+```{r}
+plot(evals[, 13:19])
+```
+
+Plot diatas cenderung tinggi korelasinya. Karena bty ini mirip2 maka perlu didrop kolom dan hanya menggunakan bty avg
+
+2. 
+```{r}
+m_bty_gen <- lm(score ~ bty_avg + gender, data = evals)
+```
+
+```{r}
+summary(m_bty_gen)
+```
+
+```{r}
+qqnorm(m_bty$residuals)
+```
+
+
+```{r}
+qqline(m_bty$residuals)
+```
+
+```{r}
+qqnorm(m_bty_gen$residuals)
+```
+
+```{r}
+qqline(m_bty_gen$residuals)
+```
+
+jadi, penambhaan gender sebagai predictor/variabel independen akan menambah signifikasni linear modelnya
+
+
+3. 
+```{r}
+m_bty_lan <- lm(score ~ bty_avg + language, data = evals)
+```
+
+```{r}
+summary(m_bty_lan)
+```
+```{r}
+m_bty_rank <- lm(score ~ bty_avg + rank, data = evals)
+```
+
+```{r}
+summary(m_bty_rank)
+```
+
+```{r}
+m_full <- lm(score ~ rank + ethnicity + gender + language + age + cls_perc_eval 
++ cls_students + cls_level + cls_profs + cls_credits + bty_avg 
++ pic_outfit + pic_color, data = evals) 
+summary(m_full)
+```
+
+
+
